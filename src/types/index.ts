@@ -33,10 +33,8 @@ export type OrderType = typeof OrderType[keyof typeof OrderType];
 
 export const OrderStatus = {
   PENDING: "PENDING",
-  CONFIRMED: "CONFIRMED",
   PREPARING: "PREPARING",
   READY: "READY",
-  SERVED: "SERVED",
   COMPLETED: "COMPLETED",
   CANCELLED: "CANCELLED",
 } as const;
@@ -64,6 +62,12 @@ export interface ApiResponse<T = unknown> {
   message: string;
   data?: T;
   error?: string;
+  meta?: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
 }
 
 // ─── Pagination ───────────────────────────────────────────────────────────────

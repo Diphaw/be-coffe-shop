@@ -3,14 +3,28 @@ import { TableService } from "../service/table.service";
 import { parseBody } from "../helper/parseBody";
 import { createTableSchema, updateTableSchema } from "../validation/table.validation";
 import { ApiResponse } from "../types";
+import { parsePagination } from "../helper/pagination";
 
 // ─── Table Controller ─────────────────────────────────────────────────────────
 
 export class TableController {
   /** GET /api/tables — Daftar semua meja (publik) */
   static async getAll(req: Request, res: Response): Promise<void> {
-    const tables = await TableService.getAll(req.query.status as string | undefined);
-    res.json({ success: true, message: "OK", data: tables } satisfies ApiResponse);
+    const { page, limit, skip } = parsePagination(req);
+    const { status } = req.query;
+
+    const { data, meta } = await TableService.getAll({
+      status: status as string | undefined,
+      page,
+      limit,
+      skip,
+    });
+    res.json({
+      success: true,
+      message: "OK",
+      data,
+      meta,
+    } satisfies ApiResponse);
   }
 
   /** GET /api/tables/:id — Detail meja beserta order aktif (publik) */

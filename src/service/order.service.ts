@@ -10,23 +10,46 @@ import {
 // ─── Order Service ────────────────────────────────────────────────────────────
 
 export class OrderService {
-  static async getAll(filters: { status?: string; tableId?: string }) {
-    const { status, tableId } = filters;
+  static async getAll(
+    filters: { status?: string; tableId?: string } & {
+      page: number;
+      limit: number;
+      skip: number;
+    },
+  ) {
+    const { status, tableId, page, limit, skip } = filters;
 
-    return prisma.order.findMany({
-      where: {
-        ...(status ? { status: status as OrderStatus } : {}),
-        ...(tableId ? { tableId } : {}),
-      },
-      include: {
-        table: { select: { number: true } },
-        user: { select: { name: true, email: true } },
-        orderItems: {
-          include: { menuItem: { select: { name: true, imageUrl: true } } },
+    const where = {
+      ...(status ? { status: status as OrderStatus } : {}),
+      ...(tableId ? { tableId } : {}),
+    };
+
+    const [total, items] = await Promise.all([
+      prisma.order.count({ where }),
+      prisma.order.findMany({
+        where,
+        include: {
+          table: { select: { number: true } },
+          user: { select: { name: true, email: true } },
+          orderItems: {
+            include: { menuItem: { select: { name: true, imageUrl: true } } },
+          },
         },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+    ]);
+
+    return {
+      data: items,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
       },
-      orderBy: { createdAt: "desc" },
-    });
+    };
   }
 
   static async getById(id: string) {
@@ -167,7 +190,7 @@ export class OrderService {
           tableId: order.tableId,
           id: { not: order.id },
           status: {
-            in: ["PENDING", "CONFIRMED", "PREPARING", "READY", "SERVED"],
+            in: ["PENDING", "PREPARING", "READY"],
           },
         },
       });

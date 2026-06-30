@@ -103,10 +103,8 @@ enum MenuCategory {
 
 enum OrderStatus {
   PENDING
-  CONFIRMED
   PREPARING
   READY
-  SERVED
   COMPLETED
   CANCELLED
 }

@@ -3,14 +3,31 @@ import { MenuService } from "../service/menu.service";
 import { parseBody } from "../helper/parseBody";
 import { createMenuSchema, updateMenuSchema } from "../validation/menu.validation";
 import { ApiResponse } from "../types";
+import { parsePagination } from "../helper/pagination";
 
 // ─── Menu Controller ──────────────────────────────────────────────────────────
 
 export class MenuController {
   /** GET /api/menu — Daftar menu (publik, bisa diakses customer via QR) */
   static async getAll(req: Request, res: Response): Promise<void> {
-    const items = await MenuService.getAll(req.query as Record<string, string>);
-    res.json({ success: true, message: "OK", data: items } satisfies ApiResponse);
+    const { page, limit, skip } = parsePagination(req);
+    const { category, available, search } = req.query;
+
+    const { data, meta } = await MenuService.getAll({
+      category: category as string,
+      available: available as string,
+      search: search as string,
+      page,
+      limit,
+      skip,
+    });
+
+    res.json({
+      success: true,
+      message: "OK",
+      data,
+      meta,
+    } satisfies ApiResponse);
   }
 
   /** GET /api/menu/:id — Detail satu menu (publik) */

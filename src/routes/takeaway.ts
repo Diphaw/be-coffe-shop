@@ -1,10 +1,22 @@
 import { Router } from "express";
 import { TakeawayController } from "../controllers/takeaway.controller";
-import { optionalAuthenticate } from "../middleware/auth";
+import { authenticate, authorize, optionalAuthenticate } from "../middleware/auth";
 
 // ─── Takeaway Routes ──────────────────────────────────────────────────────────
 
 const router = Router();
+
+/**
+ * GET /api/takeaway
+ * Akses: Admin, Cashier
+ * Deskripsi: Mendapatkan daftar semua pesanan Takeaway (Admin & Cashier only)
+ */
+router.get(
+  "/",
+  authenticate,
+  authorize("ADMIN", "CASHIER"),
+  TakeawayController.getAll,
+);
 
 /**
  * POST /api/takeaway

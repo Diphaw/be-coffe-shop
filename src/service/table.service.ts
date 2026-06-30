@@ -14,17 +14,41 @@ function buildQrUrl(tableId: string): string {
 }
 
 export class TableService {
-  static async getAll(status?: string) {
-    return prisma.table.findMany({
-      where: status ? { status: status as TableStatus } : {},
-      orderBy: { number: "asc" },
-      include: {
-        orders: {
-          where: { status: { notIn: EXCLUDED_ORDER_STATUSES } },
-          select: { id: true, status: true, totalAmount: true },
+  static async getAll(
+    filters: { status?: string } & {
+      page: number;
+      limit: number;
+      skip: number;
+    },
+  ) {
+    const { status, page, limit, skip } = filters;
+    const where = status ? { status: status as TableStatus } : {};
+
+    const [total, items] = await Promise.all([
+      prisma.table.count({ where }),
+      prisma.table.findMany({
+        where,
+        orderBy: { number: "asc" },
+        include: {
+          orders: {
+            where: { status: { notIn: EXCLUDED_ORDER_STATUSES } },
+            select: { id: true, status: true, totalAmount: true },
+          },
         },
+        skip,
+        take: limit,
+      }),
+    ]);
+
+    return {
+      data: items,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
       },
-    });
+    };
   }
 
   static async getById(id: string) {

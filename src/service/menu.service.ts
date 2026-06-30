@@ -6,17 +6,43 @@ import { CreateMenuDto, UpdateMenuDto } from "../validation/menu.validation";
 // ─── Menu Service ─────────────────────────────────────────────────────────────
 
 export class MenuService {
-  static async getAll(filters: Record<string, string>) {
-    const { category, available, search } = filters;
+  static async getAll(
+    filters: {
+      category?: string;
+      available?: string;
+      search?: string;
+      page: number;
+      limit: number;
+      skip: number;
+    },
+  ) {
+    const { category, available, search, page, limit, skip } = filters;
 
-    return prisma.menuItem.findMany({
-      where: {
-        ...(category ? { category: category as MenuCategory } : {}),
-        ...(available === "true" ? { isAvailable: true } : {}),
-        ...(search ? { name: { contains: search, mode: "insensitive" } } : {}),
+    const where = {
+      ...(category ? { category: category as MenuCategory } : {}),
+      ...(available === "true" ? { isAvailable: true } : {}),
+      ...(search ? { name: { contains: search, mode: "insensitive" as const } } : {}),
+    };
+
+    const [total, items] = await Promise.all([
+      prisma.menuItem.count({ where }),
+      prisma.menuItem.findMany({
+        where,
+        orderBy: [{ category: "asc" }, { name: "asc" }],
+        skip,
+        take: limit,
+      }),
+    ]);
+
+    return {
+      data: items,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
       },
-      orderBy: [{ category: "asc" }, { name: "asc" }],
-    });
+    };
   }
 
   static async getById(id: string) {

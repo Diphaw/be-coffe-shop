@@ -1,25 +1,44 @@
 import { Request, Response } from "express";
 import { OrderService } from "../service/order.service";
 import { parseBody } from "../helper/parseBody";
-import { createOrderSchema, updateOrderStatusSchema } from "../validation/order.validation";
+import {
+  createOrderSchema,
+  updateOrderStatusSchema,
+} from "../validation/order.validation";
 import { AuthRequest, ApiResponse } from "../types";
+import { parsePagination } from "../helper/pagination";
 
 // ─── Order Controller ─────────────────────────────────────────────────────────
 
 export class OrderController {
   /** GET /api/orders — Daftar semua order (admin & kasir) */
   static async getAll(req: Request, res: Response): Promise<void> {
-    const orders = await OrderService.getAll({
-      status: req.query.status as string | undefined,
-      tableId: req.query.tableId as string | undefined,
+    const { page, limit, skip } = parsePagination(req);
+    const { status, tableId } = req.query;
+
+    const { data, meta } = await OrderService.getAll({
+      status: status as string | undefined,
+      tableId: tableId as string | undefined,
+      page,
+      limit,
+      skip,
     });
-    res.json({ success: true, message: "OK", data: orders } satisfies ApiResponse);
+    res.json({
+      success: true,
+      message: "OK",
+      data,
+      meta,
+    } satisfies ApiResponse);
   }
 
   /** GET /api/orders/:id — Detail order (admin & kasir) */
   static async getById(req: Request, res: Response): Promise<void> {
     const order = await OrderService.getById(String(req.params.id));
-    res.json({ success: true, message: "OK", data: order } satisfies ApiResponse);
+    res.json({
+      success: true,
+      message: "OK",
+      data: order,
+    } satisfies ApiResponse);
   }
 
   /**

@@ -79,9 +79,11 @@ app.listen(PORT, () => {
   console.log(`   DELETE /api/tables/:id             → Hapus meja (admin)`);
   console.log(`   GET    /api/tables/:id/qr          → Generate QR Code (admin)`);
   console.log(`\n   ── Orders ────────────────────────────────────`);
+  console.log(`   GET    /api/orders                 → Daftar order (admin & kasir)`);
   console.log(`   POST   /api/orders                 → Buat order Dine-In`);
   console.log(`   PATCH  /api/orders/:id/status      → Update status order`);
   console.log(`\n   ── Takeaway ──────────────────────────────────`);
+  console.log(`   GET    /api/takeaway               → Daftar order Takeaway (admin & kasir)`);
   console.log(`   POST   /api/takeaway               → Buat order Takeaway`);
 });
 
