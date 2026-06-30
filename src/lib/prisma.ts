@@ -1,7 +1,6 @@
 import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
-import { Pool } from "pg";
+import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 
 // Singleton Prisma Client
 const globalForPrisma = globalThis as unknown as {
@@ -9,10 +8,19 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient() {
-  const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+  if (!process.env.DATABASE_URL) {
+    throw new Error("DATABASE_URL is not defined in environment variables");
+  }
+
+  const dbUrl = new URL(process.env.DATABASE_URL);
+  const adapter = new PrismaMariaDb({
+    host: dbUrl.hostname,
+    port: dbUrl.port ? Number(dbUrl.port) : 3306,
+    user: dbUrl.username,
+    password: decodeURIComponent(dbUrl.password),
+    database: dbUrl.pathname.replace(/^\//, ""),
+    connectionLimit: 10,
   });
-  const adapter = new PrismaPg(pool);
 
   return new PrismaClient({
     adapter,

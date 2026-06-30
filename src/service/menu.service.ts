@@ -21,7 +21,7 @@ export class MenuService {
     const where = {
       ...(category ? { category: category as MenuCategory } : {}),
       ...(available === "true" ? { isAvailable: true } : {}),
-      ...(search ? { name: { contains: search, mode: "insensitive" as const } } : {}),
+      ...(search ? { name: { contains: search } } : {}),
     };
 
     const [total, items] = await Promise.all([
@@ -54,7 +54,7 @@ export class MenuService {
   static async create(dto: CreateMenuDto) {
     if (dto.name) {
       const existing = await prisma.menuItem.findFirst({
-        where: { name: { equals: dto.name, mode: "insensitive" } },
+        where: { name: { equals: dto.name } },
       });
       if (existing) {
         throw AppError.conflict("Nama menu sudah digunakan.");
@@ -67,7 +67,7 @@ export class MenuService {
     await this.getById(id); // pastikan ada
     if (dto.name) {
       const existing = await prisma.menuItem.findFirst({
-        where: { name: { equals: dto.name, mode: "insensitive" } },
+        where: { name: { equals: dto.name } },
       });
       if (existing && existing.id !== id) {
         throw AppError.conflict("Nama menu sudah digunakan.");
